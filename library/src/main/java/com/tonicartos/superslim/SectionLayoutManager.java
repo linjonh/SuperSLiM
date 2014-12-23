@@ -32,13 +32,13 @@ public abstract class SectionLayoutManager {
      * Find the highest displayed edge of the section. If there is no member found then return the
      * start edge instead.
      */
-    public abstract int getHighestEdge(int section, int startEdge);
+    public abstract int getHighestEdge(int section);
 
     /**
      * Find the lowest displayed edge of the section. IF there is no member found then return the
      * end edge instead.
      */
-    public abstract int getLowestEdge(int section, int endEdge);
+    public abstract int getLowestEdge(int section);
 
     /**
      * Measure and layout children. Make sure to only lay out views belonging to this mSection,

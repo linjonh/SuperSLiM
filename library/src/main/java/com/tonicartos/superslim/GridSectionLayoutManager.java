@@ -185,7 +185,7 @@ public class GridSectionLayoutManager extends SectionLayoutManager {
     }
 
     @Override
-    public int getHighestEdge(int section, int startEdge) {
+    public int getHighestEdge(int section) {
         // Look from start to find children that are the highest.
         for (int i = 0; i < mLayoutManager.getChildCount(); i++) {
             View child = mLayoutManager.getChildAt(i);
@@ -200,11 +200,11 @@ public class GridSectionLayoutManager extends SectionLayoutManager {
             // A more interesting layout would have to do something more here.
             return mLayoutManager.getDecoratedTop(child);
         }
-        return startEdge;
+        return 0;
     }
 
     @Override
-    public int getLowestEdge(int section, int endEdge) {
+    public int getLowestEdge(int section) {
         // Look from end to find children that are the lowest.
         int bottomMostEdge = 0;
         int leftPosition = mLayoutManager.getWidth();

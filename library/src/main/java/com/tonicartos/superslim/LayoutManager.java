@@ -49,6 +49,15 @@ public class LayoutManager extends RecyclerView.LayoutManager {
 
     private boolean mDisableStickyHeaderDisplay = false;
 
+    /**
+     * Works the same way as {@link android.widget.AbsListView#setSmoothScrollbarEnabled(boolean)}.
+     * see {@link android.widget.AbsListView#setSmoothScrollbarEnabled(boolean)}
+     *
+     * However, it isn't very good if you are combining different types of layouts so is turned off
+     * by default.
+     */
+    private boolean mSmoothScrollbarEnabled = false;
+
     public void setSlmFactory(SlmFactory factory) {
         mSlmFactory = factory;
     }
@@ -138,7 +147,8 @@ public class LayoutManager extends RecyclerView.LayoutManager {
         recyclerView.getHandler().post(new Runnable() {
             @Override
             public void run() {
-                LinearSmoothScroller smoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
+                LinearSmoothScroller smoothScroller = new LinearSmoothScroller(
+                        recyclerView.getContext()) {
                     @Override
                     public PointF computeScrollVectorForPosition(int targetPosition) {
                         if (getChildCount() == 0) {
@@ -169,9 +179,12 @@ public class LayoutManager extends RecyclerView.LayoutManager {
                         final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
                                 view.getLayoutParams();
                         final int top = layoutManager.getDecoratedTop(view) - params.topMargin;
-                        final int bottom = layoutManager.getDecoratedBottom(view) + params.bottomMargin;
-                        final int start = getPosition(view) == 0 ? layoutManager.getPaddingTop() : 0;
-                        final int end = layoutManager.getHeight() - layoutManager.getPaddingBottom();
+                        final int bottom = layoutManager.getDecoratedBottom(view)
+                                + params.bottomMargin;
+                        final int start = getPosition(view) == 0 ? layoutManager.getPaddingTop()
+                                : 0;
+                        final int end = layoutManager.getHeight() - layoutManager
+                                .getPaddingBottom();
                         int dy = calculateDtToFit(top, bottom, start, end, snapPreference);
                         return dy == 0 ? 1 : dy;
                     }
@@ -229,7 +242,7 @@ public class LayoutManager extends RecyclerView.LayoutManager {
         View startSectionFirstView = manager.getFirstView(startSection);
         View startHeaderView = findAttachedHeaderForSection(state.getItemCount(), startSection,
                 Direction.END);
-        int startSectionHighestEdge = manager.getHighestEdge(startSection, getPaddingTop());
+        int startSectionHighestEdge = manager.getHighestEdge(startSection);
 
         // Get end views.
         int endSection = ((LayoutParams) getChildAt(getChildCount() - 1).getLayoutParams()).section;
@@ -239,7 +252,7 @@ public class LayoutManager extends RecyclerView.LayoutManager {
         View endHeaderView = findAttachedHeaderForSection(state.getItemCount(), endSection,
                 Direction.START);
         int endSectionLowestEdge = manager
-                .getLowestEdge(endSection, getHeight() - getPaddingBottom());
+                .getLowestEdge(endSection);
 
         //Work out if reached start.
         final boolean startDisplayed;
@@ -646,70 +659,155 @@ public class LayoutManager extends RecyclerView.LayoutManager {
         }
     }
 
+    /**
+     * When smooth scrollbar is enabled, the position and size of the scrollbar thumb is computed
+     * based on the number of visible pixels in the visible items. This however assumes that all
+     * list items have similar or equal widths or heights (depending on list orientation).
+     * If you use a list in which items have different dimensions, the scrollbar will change
+     * appearance as the user scrolls through the list. To avoid this issue,  you need to disable
+     * this property.
+     *
+     * When smooth scrollbar is disabled, the position and size of the scrollbar thumb is based
+     * solely on the number of items in the adapter and the position of the visible items inside
+     * the adapter. This provides a stable scrollbar as the user navigates through a list of items
+     * with varying widths / heights.
+     *
+     * @param enabled Whether or not to enable smooth scrollbar.
+     * @see #setSmoothScrollbarEnabled(boolean)
+     */
+    public void setSmoothScrollbarEnabled(boolean enabled) {
+        mSmoothScrollbarEnabled = enabled;
+    }
+
+    /**
+     * Returns the current state of the smooth scrollbar feature. It is enabled by default.
+     *
+     * @return True if smooth scrollbar is enabled, false otherwise.
+     * @see #setSmoothScrollbarEnabled(boolean)
+     */
+    public boolean isSmoothScrollbarEnabled() {
+        return mSmoothScrollbarEnabled;
+    }
 
     @Override
     public int computeVerticalScrollExtent(RecyclerView.State state) {
-        int endSection = ((LayoutParams) getChildAt(getChildCount() - 1).getLayoutParams()).section;
-        SectionLayoutManager manager = mSlmFactory.getSectionLayoutManager(this, endSection);
-        View endView = manager.getLastView(endSection);
+        if (getChildCount() == 0 || state.getItemCount() == 0) {
+            return 0;
+        }
 
-        int topOffset = computeVerticalScrollOffset(state);
+        if (!mSmoothScrollbarEnabled) {
+            return getChildCount();
+        }
 
-        int lastContentPosition = getPosition(endView) + 1;
-        int lastBottom = getDecoratedBottom(endView);
-        int lastHeight = getDecoratedMeasuredHeight(endView);
-        int bottomOffset = lastContentPosition * 10 - (lastBottom >= getHeight() ?
-                (lastBottom - getHeight())
-                        / (lastHeight / 10) : 0);
+        return computeSScrollExtent(state);
+    }
 
-        return bottomOffset - topOffset;
+    private int computeSScrollExtent(RecyclerView.State state) {
+        final int startSection = ((LayoutParams) getChildAt(0).getLayoutParams()).section;
+        final SectionLayoutManager startManager = mSlmFactory.getSectionLayoutManager(this,
+                startSection);
+        final int firstViewPosition = getPosition(startManager.getFirstView(startSection));
+        final int maybeHeaderPosition = getPosition(getChildAt(0));
+        final int topExtent = startManager.getHighestEdge(startSection);
+
+        // Get bottom position and extent.
+        final int endSection = ((LayoutParams) getChildAt(getChildCount() - 1)
+                .getLayoutParams()).section;
+        final SectionLayoutManager endManager = mSlmFactory.getSectionLayoutManager(this,
+                endSection);
+        final int bottomExtent = endManager.getLowestEdge(endSection);
+
+        return Math
+                .min(getWidth() - getPaddingTop() - getPaddingBottom(), bottomExtent - topExtent);
     }
 
     @Override
     public int computeVerticalScrollRange(RecyclerView.State state) {
-        return state.getItemCount() * 10;
+        if (getChildCount() == 0 || state.getItemCount() == 0) {
+            return 0;
+        }
+
+        if (!mSmoothScrollbarEnabled) {
+            return state.getItemCount();
+        }
+
+        return computeSScrollRange(state);
+    }
+
+    private int computeSScrollRange(RecyclerView.State state) {
+        final int startSection = ((LayoutParams) getChildAt(0).getLayoutParams()).section;
+        final SectionLayoutManager startManager = mSlmFactory
+                .getSectionLayoutManager(this, startSection);
+        final int firstViewPosition = getPosition(startManager.getFirstView(startSection));
+        final int maybeHeaderPosition = getPosition(getChildAt(0));
+        final int topPosition = firstViewPosition - maybeHeaderPosition == 1
+                ? maybeHeaderPosition : firstViewPosition;
+        final int topExtent = startManager.getHighestEdge(startSection);
+
+        // Get bottom position and extent.
+        final int endSection = ((LayoutParams) getChildAt(getChildCount() - 1)
+                .getLayoutParams()).section;
+        final SectionLayoutManager endManager = mSlmFactory.getSectionLayoutManager(this,
+                endSection);
+        final int bottomExtent = endManager.getLowestEdge(endSection);
+        final int bottomPosition = getPosition(endManager.getLastView(endSection));
+
+        final int range = bottomPosition - topPosition + 1;
+        final int area = bottomExtent - topExtent;
+
+        return (int) ((float) area / range * state.getItemCount());
     }
 
     @Override
     public int computeVerticalScrollOffset(RecyclerView.State state) {
-        int startSection = ((LayoutParams) getChildAt(0).getLayoutParams()).section;
-        SectionLayoutManager manager = mSlmFactory.getSectionLayoutManager(this, startSection);
-        View firstContentView = manager.getFirstView(startSection);
-        View firstHeaderView = findAttachedHeaderForSection(state.getItemCount(), startSection,
-                Direction.END);
-
-        int firstContentPosition = getPosition(firstContentView);
-        int contentTop = getDecoratedTop(firstContentView);
-        int contentHeight = getDecoratedMeasuredHeight(firstContentView);
-
-        if (firstHeaderView == null) {
-            return (int) (firstContentPosition * 10
-                    - (contentTop < 0 ? contentTop / (contentHeight / 10f) : 0));
+        if (getChildCount() == 0) {
+            return 0;
         }
 
-        int headerPosition = getPosition(firstHeaderView);
-        if (firstContentPosition - headerPosition == 1) {
-            int i = 0;
-            for (; i < getItemCount(); i++) {
-                if (getChildAt(i) == firstContentView) {
-                    break;
-                }
-            }
-            if (i + 1 < getItemCount()) {
-                View next = getChildAt(i + 1);
-                LayoutParams nextParams = (LayoutParams) next.getLayoutParams();
-                if (next == firstHeaderView || nextParams.section != startSection) {
-                    int headerTop = getDecoratedTop(firstHeaderView);
-                    int headerHeight = getDecoratedMeasuredHeight(firstHeaderView);
-                    return (int) (headerPosition * 10
-                            - (headerTop < 0 ? headerTop / (headerHeight / 20f) : 0));
-                }
-            }
-            return (int) (headerPosition * 10
-                    - (contentTop < 0 ? contentTop / (contentHeight / 20f) : 0));
+        if (!mSmoothScrollbarEnabled) {
+            return computeNSScrollOffset(state);
         }
-        return (int) (firstContentPosition * 10
-                - (contentTop < 0 ? contentTop / (contentHeight / 10f) : 0));
+
+        return computeSScrollOffset(state);
+    }
+
+    private int computeSScrollOffset(RecyclerView.State state) {
+        // Get top position and extent.
+        final int startSection = ((LayoutParams) getChildAt(0).getLayoutParams()).section;
+        final SectionLayoutManager startManager = mSlmFactory
+                .getSectionLayoutManager(this, startSection);
+        final int firstViewPosition = getPosition(startManager.getFirstView(startSection));
+        final int maybeHeaderPosition = getPosition(getChildAt(0));
+        final int topPosition = firstViewPosition - maybeHeaderPosition == 1
+                ? maybeHeaderPosition : firstViewPosition;
+        final int topExtent = startManager.getHighestEdge(startSection);
+
+        // Get bottom position and extent.
+        final int endSection = ((LayoutParams) getChildAt(getChildCount() - 1)
+                .getLayoutParams()).section;
+        final SectionLayoutManager endManager = mSlmFactory.getSectionLayoutManager(this,
+                endSection);
+        final int bottomExtent = endManager.getLowestEdge(endSection);
+        final int bottomPosition = getPosition(endManager.getLastView(endSection));
+
+        final int range = bottomPosition - topPosition + 1;
+        final int area = bottomExtent - topExtent;
+        final float averagePerRow = (float) area / range;
+
+        return Math.round(topPosition * averagePerRow + getPaddingTop() - topExtent);
+    }
+
+    private int computeNSScrollOffset(RecyclerView.State state) {
+        View top = getChildAt(0);
+        LayoutParams params = (LayoutParams) top.getLayoutParams();
+        if (params.isHeader) {
+            View second = getChildAt(1);
+            LayoutParams p = (LayoutParams) second.getLayoutParams();
+            if (getPosition(second) - getPosition(top) != 1) {
+                top = second;
+            }
+        }
+        return getPosition(top);
     }
 
     void measureHeader(LayoutState.View header) {
