@@ -1,32 +1,79 @@
-SuperSLiM
+_**Warning:** You are current looking at the development branch. For the latest stable branch, please use [early_release_4](https://github.com/TonicArtos/SuperSLiM/tree/early_release_4)._
+
+[SuperSLiM](http://tonicartos.github.io/SuperSLiM/)
 =========
+[![Current release branch](https://img.shields.io/badge/current%20release%20branch-early__release__4-orange.svg?style=flat-square)](https://github.com/TonicArtos/SuperSLiM/tree/early_release_4)[![GitHub Release Version](https://img.shields.io/github/release/tonicartos/superslim.svg?style=flat-square)](https://github.com/TonicArtos/SuperSLiM/releases/latest)[![Maven Central Version](https://maven-badges.herokuapp.com/maven-central/com.tonicartos/superslim/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/com.tonicartos/superslim)
 
-A highly configurable section based layout manager with headers and all that.
 
-## Features
-- Section Headers
-  - Sticky headers
-  - Headers in content margins
-  - Header overlays
-- Individual layouts for each section at the same time
-  - Linear
-  - Grid
-  - Staggered Grid *not yet implemented*
+SuperSLiM is a configurable layout manager for a RecyclerView. It provides a vertical scrolling list of sections. Each section is a grouping of one or more views, arranged by a section layout manager (SLM). Sections may have a header, and each header can have its own unique layout. The SLM can be one of the provided (listed below), or of your own creation.
+
+SuperSLiM also has a maintained [wiki](https://github.com/TonicArtos/SuperSLiM/wiki) with guides and documentation to help you out.
+
+## Feature Overview
+**Section Headers**  
+- Sticky headers
+- Material design style headers
+- Header overlays
+
+**Section Layout Managers (SLM)**  
+- Linear (like ListView)
+- Grid (like GridView)
+- Staggered Grid - *not yet implemented*
+- or create your own
+ 
+**Misc**  
+- Support for RTL languages
+- Smooth scroll indicator
 
 See the [Roadmap](https://github.com/TonicArtos/SuperSLiM/wiki/Roadmap) for more details and future development.
 
-![Example App Animation](https://4.bp.blogspot.com/-ep46JKpGa84/VJhX1plWWCI/AAAAAAAAXZY/9A1ArrV3a3k/s1600/SuperSLiM-Demo-small.gif)  
-This example can be found in this repository.
+## How do I get it?
+I strongly recommend using the latest stable release, unless you want to test a snapshot on the development branch. The latest stable release can be gotten by adding the following to your build.gradle file.
+```groovy
+dependencies {
+    compile 'com.tonicartos:superslim:0.4.+'
+}
+```
 
-## Getting Started
-Please refer to the [user guide](https://github.com/TonicArtos/SuperSLiM/wiki/User's%20Guide).
+For the latest development snapshot:
+```groovy
+repositories {
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+```
+
+```groovy
+dependencies {
+    compile 'com.tonicartos:superslim:0.5.0-SNAPSHOT'
+}
+```
+
+## How do I use it?
+Documentation for the development snapshot is not available. However, the documentation for the latest stable version is available.
+
+Read the [Getting Started](https://github.com/TonicArtos/SuperSLiM/wiki/Getting%20started%20with%20version%200.4) wiki page for easy to follow instructions.
+
+SuperSLiM is documented in the [wiki](https://github.com/TonicArtos/SuperSLiM/wiki/) so you can easily get stuck in.
+
+## Support
+- [Wiki](https://github.com/TonicArtos/SuperSLiM/wiki)
+- [Google+ Community](https://plus.google.com/communities/104097089134643994744)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/superslim) *(Please tag questions with superslim)*.
+ 
+## Samples
+Included in the repository.
+
+[![Example App](https://4.bp.blogspot.com/-ep46JKpGa84/VJhX1plWWCI/AAAAAAAAXZY/9A1ArrV3a3k/s1600/SuperSLiM-Demo-small.gif)](https://github.com/TonicArtos/SuperSLiM/tree/master/example)
 
 ## Acknowledgements
+Android Arsenal for its indexing of third party libraries.  
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-SuperSLiM-blue.svg?style=flat-square)](https://android-arsenal.com/details/1/1319)
+
 Thanks to Dave Smith for his introduction to writing a RecyclerView LayoutManager over at [Wires are Obsolete](http://wiresareobsolete.com/), and to Lucas Rocha for his [TwoWayView Library](http://github.com/lucasr/twoway-view/) which is worth checking out too.
 
 ## License
 ```
-Copyright (C) 2014 Tonic Artos
+Copyright (C) 2014, 2015 Tonic Artos
 
 SuperSLiM is largely original with some pieces from from Lucas Rocha's TwoWayView Library and the AOSP.
 

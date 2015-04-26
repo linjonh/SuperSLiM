@@ -1,6 +1,7 @@
 package com.tonicartos.superslimexample;
 
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.widget.TextView;
 
 /**
@@ -10,18 +11,18 @@ class CountryViewHolder extends RecyclerView.ViewHolder {
 
     private TextView mTextView;
 
-    CountryViewHolder(TextView view) {
+    CountryViewHolder(View view) {
         super(view);
 
-        mTextView = view;
+        mTextView = (TextView) view.findViewById(R.id.text);
+    }
+
+    public void bindItem(String text) {
+        mTextView.setText(text);
     }
 
     @Override
     public String toString() {
         return mTextView.getText().toString();
-    }
-
-    public void bindItem(String text) {
-        mTextView.setText(text);
     }
 }
